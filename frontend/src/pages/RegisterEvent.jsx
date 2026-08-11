@@ -3,6 +3,25 @@ import { Link, useParams } from "react-router-dom";
 
 function RegisterEvent() {
   const { id } = useParams();
+  const events = {
+  1: {
+    title: "CampusX Build Challenge",
+    category: "Hackathon",
+    emoji: "🚀",
+  },
+  2: {
+    title: "CodeSprint 2026",
+    category: "Coding Contest",
+    emoji: "💻",
+  },
+  3: {
+    title: "Full Stack Development Workshop",
+    category: "Workshop",
+    emoji: "🛠️",
+  },
+};
+
+const event = events[id];
 
   const [formData, setFormData] = useState({
     name: "",
@@ -90,7 +109,21 @@ function RegisterEvent() {
             <h1 className="mt-3 text-3xl font-bold text-gray-900">
               Register for Event
             </h1>
+          <div className="mt-6 rounded-xl bg-indigo-50 p-4">
+  <div className="flex items-center gap-3">
+    <span className="text-3xl">{event?.emoji}</span>
 
+    <div>
+      <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">
+        {event?.category}
+      </p>
+
+      <p className="mt-1 font-bold text-gray-900">
+        {event?.title}
+      </p>
+    </div>
+  </div>
+</div>
             <p className="mt-3 leading-7 text-gray-600">
               Enter your details below to register for this event.
             </p>
