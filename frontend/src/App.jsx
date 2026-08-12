@@ -5,7 +5,9 @@ import CategoryCard from "./components/CategoryCard";
 import EventCard from "./components/EventCard";
 import EventDetails from "./pages/EventDetails";
 import Events from "./pages/Events";
-
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import StudentDashboard from "./pages/StudentDashboard";
 function Home() {
   return (
     <>
@@ -198,11 +200,11 @@ function App() {
   <Route path="/" element={<Home />} />
   <Route path="/events" element={<Events />} />
   <Route path="/events/:id" element={<EventDetails />} />
-
-  <Route
-    path="/events/:id/register"
-    element={<RegisterEvent />}
-  />
+  <Route path="/student/dashboard" element={<StudentDashboard />} />
+  <Route path="/events/:id/register" element={<RegisterEvent />} />
+  <Route path="/login" element={<Login />} />
+  <Route path="/register" element={<Register />} />
+  <Route path="/student/dashboard" element={<StudentDashboard />} />
 </Routes>
     </BrowserRouter>
   );
