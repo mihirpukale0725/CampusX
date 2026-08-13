@@ -1,36 +1,44 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 function RegisterEvent() {
   const { id } = useParams();
-  const events = {
-  1: {
-    title: "CampusX Build Challenge",
-    category: "Hackathon",
-    emoji: "🚀",
-  },
-  2: {
-    title: "CodeSprint 2026",
-    category: "Coding Contest",
-    emoji: "💻",
-  },
-  3: {
-    title: "Full Stack Development Workshop",
-    category: "Workshop",
-    emoji: "🛠️",
-  },
-};
+  const navigate = useNavigate();
 
-const event = events[id];
+  const events = {
+    1: {
+      title: "CampusX Build Challenge",
+      category: "Hackathon",
+      emoji: "🚀",
+    },
+    2: {
+      title: "CodeSprint 2026",
+      category: "Coding Contest",
+      emoji: "💻",
+    },
+    3: {
+      title: "Full Stack Development Workshop",
+      category: "Workshop",
+      emoji: "🛠️",
+    },
+  };
+
+  const event = events[id];
+
+  // Get logged-in student
+  const storedUser = JSON.parse(
+    localStorage.getItem("campusxUser")
+  );
 
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    college: "",
+    name: storedUser?.name || "",
+    email: storedUser?.email || "",
+    college: storedUser?.college || "",
     phone: "",
   });
 
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState("");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -39,13 +47,86 @@ const event = events[id];
       ...previousData,
       [name]: value,
     }));
+
+    setError("");
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    // Check login
+    const isLoggedIn =
+      localStorage.getItem("campusxLoggedIn") === "true";
+
+    if (!isLoggedIn || !storedUser) {
+      navigate("/login");
+      return;
+    }
+
+    // Get existing registrations
+    const existingRegistrations = JSON.parse(
+      localStorage.getItem("campusxRegistrations") || "[]"
+    );
+
+    // Check if already registered
+    const alreadyRegistered = existingRegistrations.some(
+      (registration) =>
+        registration.eventId === id &&
+        registration.email === storedUser.email
+    );
+
+    if (alreadyRegistered) {
+      setError("You are already registered for this event.");
+      return;
+    }
+
+    // Create new registration
+    const newRegistration = {
+      id: Date.now(),
+      eventId: id,
+      eventTitle: event.title,
+      category: event.category,
+      emoji: event.emoji,
+      name: formData.name,
+      email: formData.email,
+      college: formData.college,
+      phone: formData.phone,
+      registeredAt: new Date().toISOString(),
+    };
+
+    // Save registration
+    localStorage.setItem(
+      "campusxRegistrations",
+      JSON.stringify([
+        ...existingRegistrations,
+        newRegistration,
+      ])
+    );
+
     setSubmitted(true);
   };
 
+  // Event doesn't exist
+  if (!event) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 px-6">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-gray-900">
+            Event Not Found
+          </h1>
+
+          <Link
+            to="/events"
+            className="mt-6 inline-block rounded-xl bg-indigo-600 px-6 py-3 font-semibold text-white"
+          >
+            Browse Events
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Successful registration
   if (submitted) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 px-6">
@@ -58,17 +139,20 @@ const event = events[id];
           </h1>
 
           <p className="mt-4 leading-7 text-gray-600">
-            You have successfully registered for this event.
-            We will send further details to your registered email.
+            You have successfully registered for{" "}
+            <span className="font-semibold text-gray-900">
+              {event.title}
+            </span>
+            .
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
 
             <Link
-              to={`/events/${id}`}
+              to="/student/dashboard"
               className="rounded-xl bg-indigo-600 px-6 py-3 font-semibold text-white transition hover:bg-indigo-700"
             >
-              Back to Event
+              View Dashboard
             </Link>
 
             <Link
@@ -109,27 +193,37 @@ const event = events[id];
             <h1 className="mt-3 text-3xl font-bold text-gray-900">
               Register for Event
             </h1>
-          <div className="mt-6 rounded-xl bg-indigo-50 p-4">
-  <div className="flex items-center gap-3">
-    <span className="text-3xl">{event?.emoji}</span>
 
-    <div>
-      <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">
-        {event?.category}
-      </p>
+            {/* Event Information */}
+            <div className="mt-6 rounded-xl bg-indigo-50 p-4">
+              <div className="flex items-center gap-3">
 
-      <p className="mt-1 font-bold text-gray-900">
-        {event?.title}
-      </p>
-    </div>
-  </div>
-</div>
+                <span className="text-3xl">
+                  {event.emoji}
+                </span>
+
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">
+                    {event.category}
+                  </p>
+
+                  <p className="mt-1 font-bold text-gray-900">
+                    {event.title}
+                  </p>
+                </div>
+
+              </div>
+            </div>
+
             <p className="mt-3 leading-7 text-gray-600">
-              Enter your details below to register for this event.
+              Confirm your details below to register for this event.
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+          <form
+            onSubmit={handleSubmit}
+            className="mt-8 space-y-6"
+          >
 
             {/* Name */}
             <div>
@@ -214,6 +308,13 @@ const event = events[id];
                 className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
               />
             </div>
+
+            {/* Error */}
+            {error && (
+              <div className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+                {error}
+              </div>
+            )}
 
             {/* Submit */}
             <button
