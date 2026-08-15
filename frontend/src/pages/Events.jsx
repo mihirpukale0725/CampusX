@@ -54,6 +54,29 @@ function Events() {
     "Seminar",
   ];
 
+  // Get logged-in student
+  const user = JSON.parse(
+    localStorage.getItem("campusxUser")
+  );
+
+  // Get saved registrations
+  const registrations = JSON.parse(
+    localStorage.getItem("campusxRegistrations") || "[]"
+  );
+
+  // Check whether the current student is registered for an event
+  const isRegistered = (eventId) => {
+    if (!user) {
+      return false;
+    }
+
+    return registrations.some(
+      (registration) =>
+        registration.eventId === String(eventId) &&
+        registration.email === user.email
+    );
+  };
+
   const filteredEvents = events.filter((event) => {
     const matchesCategory =
       selectedCategory === "All" ||
@@ -116,14 +139,14 @@ function Events() {
             <button
               key={category}
               onClick={() => {
-  setSelectedCategory(category);
+                setSelectedCategory(category);
 
-  if (category === "All") {
-    setSearchParams({});
-  } else {
-    setSearchParams({ category });
-  }
-}}
+                if (category === "All") {
+                  setSearchParams({});
+                } else {
+                  setSearchParams({ category });
+                }
+              }}
               className={`rounded-full px-5 py-2.5 text-sm font-semibold transition ${
                 selectedCategory === category
                   ? "bg-indigo-600 text-white"
@@ -154,10 +177,20 @@ function Events() {
           <div className="mt-8 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
 
             {filteredEvents.map((event) => (
-              <EventCard
-                key={event.id}
-                {...event}
-              />
+              <div key={event.id} className="relative">
+
+                {/* Registered Badge */}
+                {isRegistered(event.id) && (
+                  <div className="absolute right-3 top-3 z-10 rounded-full bg-green-100 px-3 py-1.5 text-xs font-bold text-green-700 shadow-sm">
+                    ✓ Registered
+                  </div>
+                )}
+
+                <EventCard
+                  {...event}
+                />
+
+              </div>
             ))}
 
           </div>
