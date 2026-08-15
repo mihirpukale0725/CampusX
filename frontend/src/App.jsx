@@ -196,7 +196,7 @@ function Home() {
 function App() {
   return (
     <BrowserRouter>
-     <Routes>
+    <Routes>
   <Route path="/" element={<Home />} />
   <Route path="/events" element={<Events />} />
   <Route path="/events/:id" element={<EventDetails />} />
@@ -204,7 +204,6 @@ function App() {
   <Route path="/events/:id/register" element={<RegisterEvent />} />
   <Route path="/login" element={<Login />} />
   <Route path="/register" element={<Register />} />
-  <Route path="/student/dashboard" element={<StudentDashboard />} />
 </Routes>
     </BrowserRouter>
   );
