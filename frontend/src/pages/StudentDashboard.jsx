@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 function StudentDashboard() {
@@ -7,8 +8,10 @@ function StudentDashboard() {
     localStorage.getItem("campusxUser")
   );
 
-  const registrations = JSON.parse(
-    localStorage.getItem("campusxRegistrations") || "[]"
+  const [registrations, setRegistrations] = useState(
+    JSON.parse(
+      localStorage.getItem("campusxRegistrations") || "[]"
+    )
   );
 
   // Show only registrations belonging to the logged-in student
@@ -19,6 +22,41 @@ function StudentDashboard() {
   const handleLogout = () => {
     localStorage.removeItem("campusxLoggedIn");
     navigate("/login");
+  };
+
+  // Cancel registration
+  const handleCancelRegistration = (registrationId) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to cancel this registration?"
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    const updatedRegistrations = registrations.filter(
+      (registration) => registration.id !== registrationId
+    );
+
+    localStorage.setItem(
+      "campusxRegistrations",
+      JSON.stringify(updatedRegistrations)
+    );
+
+    setRegistrations(updatedRegistrations);
+  };
+
+  // Format registration date
+  const formatDate = (date) => {
+    if (!date) {
+      return "Recently";
+    }
+
+    return new Date(date).toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
   };
 
   return (
@@ -210,10 +248,19 @@ function StudentDashboard() {
                       {registration.email}
                     </p>
 
+                    {/* Registration Date */}
+                    <p className="mt-3 text-sm text-gray-500">
+                      Registered on
+                    </p>
+
+                    <p className="mt-1 font-medium text-gray-900">
+                      {formatDate(registration.registeredAt)}
+                    </p>
+
                   </div>
 
-                  {/* Action */}
-                  <div className="mt-5 border-t border-gray-100 pt-4">
+                  {/* Actions */}
+                  <div className="mt-5 flex flex-col gap-3 border-t border-gray-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
 
                     <Link
                       to={`/events/${registration.eventId}`}
@@ -221,6 +268,15 @@ function StudentDashboard() {
                     >
                       View Event →
                     </Link>
+
+                    <button
+                      onClick={() =>
+                        handleCancelRegistration(registration.id)
+                      }
+                      className="text-sm font-semibold text-red-600 hover:text-red-700"
+                    >
+                      Cancel Registration
+                    </button>
 
                   </div>
 
