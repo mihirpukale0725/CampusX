@@ -3,11 +3,13 @@ const cors = require("cors");
 require("dotenv").config();
 
 const pool = require("./config/db");
+const eventsRouter = require("./routes/events");
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use("/api/events", eventsRouter);
 
 app.get("/", (req, res) => {
   res.send("CampusX API is running 🚀");

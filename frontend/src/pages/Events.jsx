@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import EventCard from "../components/EventCard";
 
@@ -13,38 +13,36 @@ function Events() {
 
   const [search, setSearch] = useState("");
 
-  const events = [
-    {
-      id: 1,
-      category: "Hackathon",
-      title: "CampusX Build Challenge",
-      date: "24 August 2026",
-      location: "SPIT, Mumbai",
-      registrations: "120",
-      description:
-        "Build an innovative solution to a real-world problem and compete with talented student teams.",
-    },
-    {
-      id: 2,
-      category: "Coding Contest",
-      title: "CodeSprint 2026",
-      date: "28 August 2026",
-      location: "Online",
-      registrations: "250",
-      description:
-        "Test your DSA and problem-solving skills in this competitive programming challenge.",
-    },
-    {
-      id: 3,
-      category: "Workshop",
-      title: "Full Stack Development Workshop",
-      date: "2 September 2026",
-      location: "SPIT, Mumbai",
-      registrations: "85",
-      description:
-        "Learn how modern full-stack applications are designed, developed and deployed.",
-    },
-  ];
+  // Backend/API state
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  // Fetch events from PostgreSQL through Express API
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:5000/api/events"
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch events");
+        }
+
+        const data = await response.json();
+
+        setEvents(data);
+      } catch (error) {
+        console.error("Error fetching events:", error);
+        setError("Unable to load events. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, []);
 
   const categories = [
     "All",
@@ -54,29 +52,7 @@ function Events() {
     "Seminar",
   ];
 
-  // Get logged-in student
-  const user = JSON.parse(
-    localStorage.getItem("campusxUser")
-  );
-
-  // Get saved registrations
-  const registrations = JSON.parse(
-    localStorage.getItem("campusxRegistrations") || "[]"
-  );
-
-  // Check whether the current student is registered for an event
-  const isRegistered = (eventId) => {
-    if (!user) {
-      return false;
-    }
-
-    return registrations.some(
-      (registration) =>
-        registration.eventId === String(eventId) &&
-        registration.email === user.email
-    );
-  };
-
+  // Filter events
   const filteredEvents = events.filter((event) => {
     const matchesCategory =
       selectedCategory === "All" ||
@@ -120,7 +96,10 @@ function Events() {
               className="flex-1 bg-transparent px-5 py-3 outline-none"
             />
 
-            <button className="rounded-xl bg-indigo-600 px-6 py-3 font-semibold text-white">
+            <button
+              type="button"
+              className="rounded-xl bg-indigo-600 px-6 py-3 font-semibold text-white"
+            >
               Search
             </button>
 
@@ -167,34 +146,67 @@ function Events() {
           </h2>
 
           <p className="mt-2 text-gray-500">
-            {filteredEvents.length} events found
+            {loading
+              ? "Loading events..."
+              : `${filteredEvents.length} events found`}
           </p>
 
         </div>
 
-        {/* Event Cards */}
-        {filteredEvents.length > 0 ? (
+        {/* Loading */}
+        {loading ? (
+          <div className="mt-12 rounded-2xl bg-white py-20 text-center">
+
+            <div className="text-4xl">
+              ⏳
+            </div>
+
+            <h3 className="mt-4 text-xl font-bold text-gray-900">
+              Loading events...
+            </h3>
+
+            <p className="mt-2 text-gray-500">
+              Fetching the latest events from CampusX.
+            </p>
+
+          </div>
+
+        ) : error ? (
+
+          /* Error */
+          <div className="mt-12 rounded-2xl border border-red-200 bg-white py-20 text-center">
+
+            <div className="text-4xl">
+              ⚠️
+            </div>
+
+            <h3 className="mt-4 text-xl font-bold text-gray-900">
+              Unable to load events
+            </h3>
+
+            <p className="mt-2 text-gray-500">
+              {error}
+            </p>
+
+          </div>
+
+        ) : filteredEvents.length > 0 ? (
+
+          /* Event Cards */
           <div className="mt-8 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
 
             {filteredEvents.map((event) => (
-              <div key={event.id} className="relative">
-
-                {/* Registered Badge */}
-                {isRegistered(event.id) && (
-                  <div className="absolute right-3 top-3 z-10 rounded-full bg-green-100 px-3 py-1.5 text-xs font-bold text-green-700 shadow-sm">
-                    ✓ Registered
-                  </div>
-                )}
-
-                <EventCard
-                  {...event}
-                />
-
-              </div>
+              <EventCard
+                key={event.id}
+                {...event}
+              />
             ))}
 
           </div>
+
         ) : (
+
+          /* No Events */
           <div className="mt-12 rounded-2xl border border-dashed border-gray-300 bg-white py-20 text-center">
 
             <div className="text-5xl">
@@ -210,6 +222,7 @@ function Events() {
             </p>
 
           </div>
+
         )}
 
       </main>
