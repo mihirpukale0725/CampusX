@@ -4,12 +4,14 @@ require("dotenv").config();
 
 const pool = require("./config/db");
 const eventsRouter = require("./routes/events");
+const registrationsRoutes = require("./routes/registrations");
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 app.use("/api/events", eventsRouter);
+app.use("/api/registrations", registrationsRoutes);
 
 app.get("/", (req, res) => {
   res.send("CampusX API is running 🚀");
