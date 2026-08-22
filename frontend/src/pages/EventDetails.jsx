@@ -1,78 +1,80 @@
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 function EventDetails() {
   const { id } = useParams();
 
-  const events = {
-    1: {
-      category: "Hackathon",
-      emoji: "🚀",
-      title: "CampusX Build Challenge",
-      description:
-        "Build an innovative solution to a real-world problem and compete with talented student teams from across campuses.",
-      date: "24 August 2026",
-      location: "SPIT, Mumbai",
-      registrations: "120 Students",
-      teamSize: "2 - 4 Members",
-      registrationDeadline: "22 August 2026",
-      about:
-        "CampusX Build Challenge is a student-focused hackathon designed to encourage innovation, collaboration and practical problem solving.",
-    },
+  const [event, setEvent] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-    2: {
-      category: "Coding Contest",
-      emoji: "💻",
-      title: "CodeSprint 2026",
-      description:
-        "Test your DSA and problem-solving skills in this competitive programming challenge and compete with talented coders.",
-      date: "28 August 2026",
-      location: "Online",
-      registrations: "250 Students",
-      teamSize: "Individual",
-      registrationDeadline: "27 August 2026",
-      about:
-        "CodeSprint 2026 is a competitive programming contest focused on algorithms, data structures and problem solving.",
-    },
+  useEffect(() => {
+    const fetchEvent = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:5000/api/events/${id}`
+        );
 
-    3: {
-      category: "Workshop",
-      emoji: "🛠️",
-      title: "Full Stack Development Workshop",
-      description:
-        "Learn how modern full-stack applications are designed, developed and deployed using popular web technologies.",
-      date: "2 September 2026",
-      location: "SPIT, Mumbai",
-      registrations: "85 Students",
-      teamSize: "Individual",
-      registrationDeadline: "1 September 2026",
-      about:
-        "This hands-on workshop introduces students to frontend development, backend APIs, databases and deployment.",
-    },
-  };
+        if (!response.ok) {
+          throw new Error("Event not found");
+        }
 
-  const event = events[id];
+        const data = await response.json();
 
-  // Invalid event ID
-  if (!event) {
+        setEvent(data);
+      } catch (error) {
+        console.error("Error fetching event:", error);
+        setError("Unable to load this event.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvent();
+  }, [id]);
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="text-5xl">⏳</div>
+
+          <h2 className="mt-4 text-xl font-bold text-gray-900">
+            Loading event...
+          </h2>
+
+          <p className="mt-2 text-gray-500">
+            Fetching event details from CampusX.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error || !event) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 px-6">
-        <div className="text-center">
-          <div className="text-6xl">🔍</div>
+        <div className="w-full max-w-lg rounded-2xl border border-gray-200 bg-white p-10 text-center shadow-sm">
 
-          <h1 className="mt-6 text-3xl font-bold text-gray-900">
-            Event not found
+          <div className="text-5xl">⚠️</div>
+
+          <h1 className="mt-5 text-2xl font-bold text-gray-900">
+            Event Not Found
           </h1>
 
           <p className="mt-3 text-gray-500">
-            The event you are looking for does not exist.
+            {error || "The event you are looking for does not exist."}
           </p>
 
           <Link
             to="/events"
-            className="mt-6 inline-block rounded-xl bg-indigo-600 px-6 py-3 font-semibold text-white"
+            className="mt-6 inline-block rounded-xl bg-indigo-600 px-6 py-3 font-semibold text-white hover:bg-indigo-700"
           >
             Browse Events
           </Link>
+
         </div>
       </div>
     );
@@ -81,10 +83,10 @@ function EventDetails() {
   return (
     <div className="min-h-screen bg-gray-50">
 
-      <section className="bg-white">
-        <div className="mx-auto max-w-7xl px-6 py-12">
+      {/* Header */}
+      <section className="bg-white py-16">
+        <div className="mx-auto max-w-5xl px-6">
 
-          {/* Back */}
           <Link
             to="/events"
             className="text-sm font-semibold text-indigo-600 hover:text-indigo-700"
@@ -92,131 +94,119 @@ function EventDetails() {
             ← Back to Events
           </Link>
 
-          <div className="mt-8 grid gap-10 lg:grid-cols-3">
+          <div className="mt-8">
 
-            {/* Main Content */}
-            <div className="lg:col-span-2">
+            <p className="text-sm font-semibold uppercase tracking-wider text-indigo-600">
+              {event.category}
+            </p>
 
-              {/* Event Image */}
-              <div className="flex h-64 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-100 to-purple-100">
-                <span className="text-8xl">
-                  {event.emoji}
-                </span>
-              </div>
+            <h1 className="mt-3 text-4xl font-bold tracking-tight text-gray-900 md:text-5xl">
+              {event.title}
+            </h1>
 
-              {/* Category */}
-              <span className="mt-8 inline-block rounded-full bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-600">
-                {event.category}
-              </span>
+            <p className="mt-5 max-w-3xl text-lg leading-8 text-gray-600">
+              {event.description}
+            </p>
 
-              {/* Title */}
-              <h1 className="mt-4 text-4xl font-bold text-gray-900 md:text-5xl">
-                {event.title}
-              </h1>
+          </div>
 
-              {/* Description */}
-              <p className="mt-5 text-lg leading-8 text-gray-600">
+        </div>
+      </section>
+
+      {/* Event Information */}
+      <main className="mx-auto max-w-5xl px-6 py-12">
+
+        <div className="grid gap-8 md:grid-cols-3">
+
+          {/* Main Details */}
+          <div className="md:col-span-2">
+
+            <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+
+              <h2 className="text-2xl font-bold text-gray-900">
+                About This Event
+              </h2>
+
+              <p className="mt-5 leading-8 text-gray-600">
                 {event.description}
               </p>
 
-              {/* Details */}
-              <div className="mt-8 grid gap-4 sm:grid-cols-2">
+            </div>
 
-                <div className="rounded-xl border border-gray-200 bg-white p-5">
+          </div>
+
+          {/* Event Info Card */}
+          <div>
+
+            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+
+              <h2 className="text-lg font-bold text-gray-900">
+                Event Details
+              </h2>
+
+              <div className="mt-6 space-y-5">
+
+                {/* Date */}
+                <div>
                   <p className="text-sm text-gray-500">
                     Date
                   </p>
 
                   <p className="mt-1 font-semibold text-gray-900">
-                    {event.date}
+                    📅 {event.date}
                   </p>
                 </div>
 
-                <div className="rounded-xl border border-gray-200 bg-white p-5">
+                {/* Location */}
+                <div>
                   <p className="text-sm text-gray-500">
                     Location
                   </p>
 
                   <p className="mt-1 font-semibold text-gray-900">
-                    {event.location}
+                    📍 {event.location}
                   </p>
                 </div>
 
-                <div className="rounded-xl border border-gray-200 bg-white p-5">
+                {/* Registrations */}
+                <div>
                   <p className="text-sm text-gray-500">
                     Registrations
                   </p>
 
                   <p className="mt-1 font-semibold text-gray-900">
-                    {event.registrations}
+                    👥 {event.registrations} students
                   </p>
                 </div>
 
-                <div className="rounded-xl border border-gray-200 bg-white p-5">
+                {/* Category */}
+                <div>
                   <p className="text-sm text-gray-500">
-                    Participation
+                    Category
                   </p>
 
                   <p className="mt-1 font-semibold text-gray-900">
-                    {event.teamSize}
+                    🏷️ {event.category}
                   </p>
                 </div>
 
               </div>
 
-              {/* About */}
-              <div className="mt-12">
-
-                <h2 className="text-2xl font-bold text-gray-900">
-                  About this event
-                </h2>
-
-                <p className="mt-4 leading-8 text-gray-600">
-                  {event.about}
-                </p>
-
-              </div>
-
-            </div>
-
-            {/* Registration Card */}
-            <div>
-
-              <div className="sticky top-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-
-                <h2 className="text-xl font-bold text-gray-900">
-                  Ready to participate?
-                </h2>
-
-                <p className="mt-3 text-sm leading-6 text-gray-500">
-                  Secure your spot and participate in this exciting event.
-                </p>
-
-               <Link
-  to={`/events/${id}/register`}
-  className="mt-6 block w-full rounded-xl bg-indigo-600 py-4 text-center font-semibold text-white transition hover:bg-indigo-700"
->
-  Register Now
-</Link>
-                <div className="mt-6 border-t border-gray-100 pt-5">
-
-                  <p className="text-sm text-gray-500">
-                    Registration closes
-                  </p>
-
-                  <p className="mt-1 font-semibold text-gray-900">
-                    {event.registrationDeadline}
-                  </p>
-
-                </div>
-
-              </div>
+              {/* Register Button */}
+              <Link
+                to={`/events/${event.id}/register`}
+                className="mt-8 block rounded-xl bg-indigo-600 px-6 py-4 text-center font-semibold text-white transition hover:bg-indigo-700"
+              >
+                Register for Event
+              </Link>
 
             </div>
 
           </div>
+
         </div>
-      </section>
+
+      </main>
 
     </div>
   );
