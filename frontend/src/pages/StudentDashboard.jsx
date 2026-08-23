@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 function StudentDashboard() {
@@ -8,55 +8,45 @@ function StudentDashboard() {
     localStorage.getItem("campusxUser")
   );
 
-  const [registrations, setRegistrations] = useState(
-    JSON.parse(
-      localStorage.getItem("campusxRegistrations") || "[]"
-    )
-  );
+  const [myRegistrations, setMyRegistrations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  // Show only registrations belonging to the logged-in student
-  const myRegistrations = registrations.filter(
-    (registration) => registration.email === user?.email
-  );
+  useEffect(() => {
+    const fetchRegistrations = async () => {
+      if (!user?.email) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `http://localhost:5000/api/registrations/student/${encodeURIComponent(
+            user.email
+          )}`
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch registrations");
+        }
+
+        const data = await response.json();
+
+        setMyRegistrations(data.registrations || []);
+      } catch (error) {
+        console.error("Error fetching registrations:", error);
+        setError("Unable to load your registrations.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRegistrations();
+  }, [user?.email]);
 
   const handleLogout = () => {
     localStorage.removeItem("campusxLoggedIn");
     navigate("/login");
-  };
-
-  // Cancel registration
-  const handleCancelRegistration = (registrationId) => {
-    const confirmed = window.confirm(
-      "Are you sure you want to cancel this registration?"
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
-    const updatedRegistrations = registrations.filter(
-      (registration) => registration.id !== registrationId
-    );
-
-    localStorage.setItem(
-      "campusxRegistrations",
-      JSON.stringify(updatedRegistrations)
-    );
-
-    setRegistrations(updatedRegistrations);
-  };
-
-  // Format registration date
-  const formatDate = (date) => {
-    if (!date) {
-      return "Recently";
-    }
-
-    return new Date(date).toLocaleDateString("en-IN", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
   };
 
   return (
@@ -163,130 +153,165 @@ function StudentDashboard() {
 
           </div>
 
-          {/* Registration Cards */}
-          {myRegistrations.length === 0 ? (
+          {/* Loading */}
+          {loading && (
+            <div className="mt-6 rounded-2xl bg-white p-10 text-center shadow-sm">
 
-            <div className="mt-6 rounded-2xl border border-dashed border-gray-300 bg-white p-10 text-center">
-
-              <div className="text-5xl">
-                📅
+              <div className="text-4xl">
+                ⏳
               </div>
 
-              <h3 className="mt-4 text-xl font-bold text-gray-900">
-                No registrations yet
-              </h3>
-
-              <p className="mt-2 text-gray-500">
-                Explore CampusX events and register for your first event.
+              <p className="mt-4 font-semibold text-gray-900">
+                Loading registrations...
               </p>
 
-              <Link
-                to="/events"
-                className="mt-6 inline-block rounded-xl bg-indigo-600 px-6 py-3 font-semibold text-white hover:bg-indigo-700"
-              >
-                Browse Events
-              </Link>
+            </div>
+          )}
+
+          {/* Error */}
+          {!loading && error && (
+            <div className="mt-6 rounded-2xl bg-red-50 p-6 text-center">
+
+              <p className="font-semibold text-red-600">
+                {error}
+              </p>
 
             </div>
+          )}
 
-          ) : (
+          {/* No registrations */}
+          {!loading &&
+            !error &&
+            myRegistrations.length === 0 && (
+              <div className="mt-6 rounded-2xl border border-dashed border-gray-300 bg-white p-10 text-center">
 
-            <div className="mt-6 grid gap-6 md:grid-cols-2">
+                <div className="text-5xl">
+                  📅
+                </div>
 
-              {myRegistrations.map((registration) => (
+                <h3 className="mt-4 text-xl font-bold text-gray-900">
+                  No registrations yet
+                </h3>
 
-                <div
-                  key={registration.id}
-                  className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+                <p className="mt-2 text-gray-500">
+                  Explore CampusX events and register for your first event.
+                </p>
+
+                <Link
+                  to="/events"
+                  className="mt-6 inline-block rounded-xl bg-indigo-600 px-6 py-3 font-semibold text-white hover:bg-indigo-700"
                 >
+                  Browse Events
+                </Link>
 
-                  {/* Event Header */}
-                  <div className="flex items-start justify-between gap-4">
+              </div>
+            )}
 
-                    <div className="flex items-center gap-4">
+          {/* Registration Cards */}
+          {!loading &&
+            !error &&
+            myRegistrations.length > 0 && (
+              <div className="mt-6 grid gap-6 md:grid-cols-2">
 
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-2xl">
-                        {registration.emoji}
+                {myRegistrations.map((registration) => (
+
+                  <div
+                    key={registration.id}
+                    className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+                  >
+
+                    {/* Event Header */}
+                    <div className="flex items-start justify-between gap-4">
+
+                      <div className="flex items-center gap-4">
+
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-2xl">
+                          {registration.category === "Hackathon"
+                            ? "🚀"
+                            : registration.category === "Coding Contest"
+                            ? "💻"
+                            : "🛠️"}
+                        </div>
+
+                        <div>
+
+                          <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">
+                            {registration.category}
+                          </p>
+
+                          <h3 className="mt-1 font-bold text-gray-900">
+                            {registration.event_title}
+                          </h3>
+
+                        </div>
+
                       </div>
 
-                      <div>
+                      <span className="shrink-0 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+                        Registered
+                      </span>
 
-                        <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">
-                          {registration.category}
+                    </div>
+
+                    {/* Details */}
+                    <div className="mt-5 border-t border-gray-100 pt-4">
+
+                      <div className="grid gap-4 sm:grid-cols-2">
+
+                        <div>
+                          <p className="text-sm text-gray-500">
+                            Date
+                          </p>
+
+                          <p className="mt-1 font-medium text-gray-900">
+                            📅 {registration.date}
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="text-sm text-gray-500">
+                            Location
+                          </p>
+
+                          <p className="mt-1 font-medium text-gray-900">
+                            📍 {registration.location}
+                          </p>
+                        </div>
+
+                      </div>
+
+                      <div className="mt-4">
+
+                        <p className="text-sm text-gray-500">
+                          Registered by
                         </p>
 
-                        <h3 className="mt-1 font-bold text-gray-900">
-                          {registration.eventTitle}
-                        </h3>
+                        <p className="mt-1 font-medium text-gray-900">
+                          {registration.name}
+                        </p>
 
                       </div>
 
                     </div>
 
-                    <span className="shrink-0 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
-                      Registered
-                    </span>
+                    {/* Action */}
+                    <div className="mt-5 border-t border-gray-100 pt-4">
+
+                      <Link
+                        to={`/events/${registration.event_id}`}
+                        className="text-sm font-semibold text-indigo-600 hover:text-indigo-700"
+                      >
+                        View Event →
+                      </Link>
+
+                    </div>
 
                   </div>
 
-                  {/* Details */}
-                  <div className="mt-5 border-t border-gray-100 pt-4">
+                ))}
 
-                    <p className="text-sm text-gray-500">
-                      Registered by
-                    </p>
-
-                    <p className="mt-1 font-medium text-gray-900">
-                      {registration.name}
-                    </p>
-
-                    <p className="mt-3 text-sm text-gray-500">
-                      Email
-                    </p>
-
-                    <p className="mt-1 font-medium text-gray-900">
-                      {registration.email}
-                    </p>
-
-                    {/* Registration Date */}
-                    <p className="mt-3 text-sm text-gray-500">
-                      Registered on
-                    </p>
-
-                    <p className="mt-1 font-medium text-gray-900">
-                      {formatDate(registration.registeredAt)}
-                    </p>
-
-                  </div>
-
-                  {/* Actions */}
-                  <div className="mt-5 flex flex-col gap-3 border-t border-gray-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
-
-                    <Link
-                      to={`/events/${registration.eventId}`}
-                      className="text-sm font-semibold text-indigo-600 hover:text-indigo-700"
-                    >
-                      View Event →
-                    </Link>
-
-                    <button
-                      onClick={() =>
-                        handleCancelRegistration(registration.id)
-                      }
-                      className="text-sm font-semibold text-red-600 hover:text-red-700"
-                    >
-                      Cancel Registration
-                    </button>
-
-                  </div>
-
-                </div>
-
-              ))}
-
-            </div>
-
-          )}
+              </div>
+            )}
 
         </div>
 
