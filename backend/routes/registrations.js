@@ -51,41 +51,34 @@ router.get("/student/:email", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const {
-      eventId,
+      user_id,
+      event_id,
       name,
       email,
       college,
       phone,
     } = req.body;
 
-    // Basic validation
-    if (!eventId || !name || !email || !college || !phone) {
+    if (!name || !email || !event_id) {
       return res.status(400).json({
         success: false,
-        message: "All fields are required",
+        message: "Name, email and event are required.",
       });
     }
 
-    // Check if event exists
-    const eventResult = await pool.query(
-      "SELECT * FROM events WHERE id = $1",
-      [eventId]
-    );
-
-    if (eventResult.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Event not found",
-      });
-    }
-
-    // Save registration
     const result = await pool.query(
       `INSERT INTO registrations
-      (event_id, name, email, college, phone)
-      VALUES ($1, $2, $3, $4, $5)
-      RETURNING *`,
-      [eventId, name, email, college, phone]
+        (user_id, event_id, name, email, college, phone)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      [
+        user_id || null,
+        event_id,
+        name,
+        email,
+        college || null,
+        phone || null,
+      ]
     );
 
     res.status(201).json({
@@ -95,11 +88,19 @@ router.post("/", async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Error creating registration:", error.message);
+    console.error("Registration error:", error.message);
+
+    // Duplicate registration
+    if (error.code === "23505") {
+      return res.status(409).json({
+        success: false,
+        message: "You are already registered for this event.",
+      });
+    }
 
     res.status(500).json({
       success: false,
-      message: "Failed to register for event",
+      message: "Failed to register for event.",
     });
   }
 });
