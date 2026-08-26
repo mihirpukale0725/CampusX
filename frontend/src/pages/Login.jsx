@@ -10,6 +10,7 @@ function Login() {
   });
 
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -22,31 +23,62 @@ function Login() {
     setError("");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const storedUser = JSON.parse(localStorage.getItem("campusxUser"));
+    setLoading(true);
+    setError("");
 
-    if (!storedUser) {
-      setError("No account found. Please register first.");
-      return;
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/users/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || "Invalid email or password.");
+        return;
+      }
+
+      // Store logged-in user
+      localStorage.setItem(
+        "campusxUser",
+        JSON.stringify(data.user)
+      );
+
+      localStorage.setItem(
+        "campusxLoggedIn",
+        "true"
+      );
+
+      // Go to dashboard
+      navigate("/student/dashboard");
+
+    } catch (error) {
+      console.error("Login error:", error);
+
+      setError(
+        "Unable to connect to CampusX server. Make sure the backend is running."
+      );
+    } finally {
+      setLoading(false);
     }
-
-    if (
-      formData.email !== storedUser.email ||
-      formData.password !== storedUser.password
-    ) {
-      setError("Invalid email or password.");
-      return;
-    }
-
-    localStorage.setItem("campusxLoggedIn", "true");
-
-    navigate("/student/dashboard");
   };
 
   return (
     <div className="min-h-screen bg-gray-50 px-6 py-12">
+
       <div className="mx-auto max-w-md">
 
         {/* Header */}
@@ -64,7 +96,7 @@ function Login() {
           </h1>
 
           <p className="mt-2 text-gray-600">
-            Login to continue to your CampusX account.
+            Login to manage your events and registrations.
           </p>
 
         </div>
@@ -72,10 +104,14 @@ function Login() {
         {/* Login Card */}
         <div className="mt-8 rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-6"
+          >
 
             {/* Email */}
             <div>
+
               <label
                 htmlFor="email"
                 className="block text-sm font-semibold text-gray-700"
@@ -93,10 +129,12 @@ function Login() {
                 required
                 className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
               />
+
             </div>
 
             {/* Password */}
             <div>
+
               <label
                 htmlFor="password"
                 className="block text-sm font-semibold text-gray-700"
@@ -114,6 +152,7 @@ function Login() {
                 required
                 className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
               />
+
             </div>
 
             {/* Error */}
@@ -126,9 +165,10 @@ function Login() {
             {/* Submit */}
             <button
               type="submit"
-              className="w-full rounded-xl bg-indigo-600 py-3.5 font-semibold text-white transition hover:bg-indigo-700"
+              disabled={loading}
+              className="w-full rounded-xl bg-indigo-600 py-3.5 font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Login
+              {loading ? "Logging in..." : "Login"}
             </button>
 
           </form>
@@ -150,6 +190,7 @@ function Login() {
         </div>
 
       </div>
+
     </div>
   );
 }
