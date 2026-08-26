@@ -8,6 +8,7 @@ import Events from "./pages/Events";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import StudentDashboard from "./pages/StudentDashboard";
+import ProtectedRoute from "./components/ProtectedRoute";
 function Home() {
   return (
     <>
@@ -196,14 +197,31 @@ function Home() {
 function App() {
   return (
     <BrowserRouter>
-    <Routes>
+   <Routes>
   <Route path="/" element={<Home />} />
+
   <Route path="/events" element={<Events />} />
+
   <Route path="/events/:id" element={<EventDetails />} />
-  <Route path="/student/dashboard" element={<StudentDashboard />} />
-  <Route path="/events/:id/register" element={<RegisterEvent />} />
+
   <Route path="/login" element={<Login />} />
+
   <Route path="/register" element={<Register />} />
+
+  {/* Protected Routes */}
+  <Route element={<ProtectedRoute />}>
+
+    <Route
+      path="/student/dashboard"
+      element={<StudentDashboard />}
+    />
+
+    <Route
+      path="/events/:id/register"
+      element={<RegisterEvent />}
+    />
+
+  </Route>
 </Routes>
     </BrowserRouter>
   );
