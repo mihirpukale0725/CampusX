@@ -1,20 +1,20 @@
-import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 function Navbar() {
   const navigate = useNavigate();
 
-  const [isLoggedIn, setIsLoggedIn] = useState(
-    localStorage.getItem("campusxLoggedIn") === "true"
+  const isLoggedIn =
+    localStorage.getItem("campusxLoggedIn") === "true";
+
+  const user = JSON.parse(
+    localStorage.getItem("campusxUser") || "null"
   );
 
   const handleLogout = () => {
     localStorage.removeItem("campusxLoggedIn");
     localStorage.removeItem("campusxUser");
 
-    setIsLoggedIn(false);
-
-    navigate("/");
+    navigate("/login");
   };
 
   return (
@@ -74,38 +74,38 @@ function Navbar() {
 
           {isLoggedIn ? (
             <>
-              {/* Dashboard */}
               <Link
                 to="/student/dashboard"
-                className="rounded-xl px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-100"
+                className="hidden rounded-xl px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-100 sm:block"
               >
                 Dashboard
               </Link>
 
-              {/* Logout */}
               <button
                 onClick={handleLogout}
                 className="rounded-xl border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
               >
                 Logout
               </button>
+
+              <span className="hidden text-sm font-medium text-gray-600 lg:block">
+                {user?.name || "Student"}
+              </span>
             </>
           ) : (
             <>
-              {/* Login */}
               <Link
                 to="/login"
-                className="rounded-xl px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-100"
+                className="hidden rounded-xl px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-100 sm:block"
               >
                 Login
               </Link>
 
-              {/* Register */}
               <Link
                 to="/register"
                 className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700"
               >
-                Register
+                Create Account
               </Link>
             </>
           )}
