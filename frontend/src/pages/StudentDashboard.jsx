@@ -5,20 +5,23 @@ function StudentDashboard() {
   const navigate = useNavigate();
 
   const user = JSON.parse(
-    localStorage.getItem("campusxUser")
+    localStorage.getItem("campusxUser") || "null"
   );
+
+  const isLoggedIn =
+    localStorage.getItem("campusxLoggedIn") === "true";
 
   const [myRegistrations, setMyRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const fetchRegistrations = async () => {
-      if (!user?.email) {
-        setLoading(false);
-        return;
-      }
+    if (!isLoggedIn || !user?.email) {
+      navigate("/login");
+      return;
+    }
 
+    const fetchRegistrations = async () => {
       try {
         const response = await fetch(
           `http://localhost:5000/api/registrations/student/${encodeURIComponent(
@@ -26,11 +29,13 @@ function StudentDashboard() {
           )}`
         );
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch registrations");
-        }
-
         const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.message || "Failed to fetch registrations"
+          );
+        }
 
         setMyRegistrations(data.registrations || []);
       } catch (error) {
@@ -42,10 +47,12 @@ function StudentDashboard() {
     };
 
     fetchRegistrations();
-  }, [user?.email]);
+  }, [isLoggedIn, user?.email, navigate]);
 
   const handleLogout = () => {
     localStorage.removeItem("campusxLoggedIn");
+    localStorage.removeItem("campusxUser");
+
     navigate("/login");
   };
 
@@ -63,12 +70,20 @@ function StudentDashboard() {
             CampusX
           </Link>
 
-          <button
-            onClick={handleLogout}
-            className="rounded-xl border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-          >
-            Logout
-          </button>
+          <div className="flex items-center gap-4">
+
+            <span className="hidden text-sm font-medium text-gray-600 sm:block">
+              {user?.name || "Student"}
+            </span>
+
+            <button
+              onClick={handleLogout}
+              className="rounded-xl border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+            >
+              Logout
+            </button>
+
+          </div>
 
         </div>
       </div>
@@ -94,7 +109,6 @@ function StudentDashboard() {
         {/* Stats */}
         <div className="mt-8 grid gap-6 md:grid-cols-3">
 
-          {/* Registered Events */}
           <div className="rounded-2xl bg-white p-6 shadow-sm">
             <p className="text-sm text-gray-500">
               Registered Events
@@ -105,7 +119,6 @@ function StudentDashboard() {
             </p>
           </div>
 
-          {/* Upcoming Events */}
           <div className="rounded-2xl bg-white p-6 shadow-sm">
             <p className="text-sm text-gray-500">
               Upcoming Events
@@ -116,7 +129,6 @@ function StudentDashboard() {
             </p>
           </div>
 
-          {/* Opportunities */}
           <div className="rounded-2xl bg-white p-6 shadow-sm">
             <p className="text-sm text-gray-500">
               Opportunities
@@ -146,7 +158,7 @@ function StudentDashboard() {
 
             <Link
               to="/events"
-              className="rounded-xl bg-indigo-600 px-5 py-3 text-center text-sm font-semibold text-white hover:bg-indigo-700"
+              className="rounded-xl bg-indigo-600 px-5 py-3 text-center text-sm font-semibold text-white transition hover:bg-indigo-700"
             >
               Explore Events
             </Link>
@@ -175,6 +187,13 @@ function StudentDashboard() {
               <p className="font-semibold text-red-600">
                 {error}
               </p>
+
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-4 rounded-xl bg-red-600 px-5 py-2 text-sm font-semibold text-white hover:bg-red-700"
+              >
+                Try Again
+              </button>
 
             </div>
           )}
