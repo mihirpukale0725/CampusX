@@ -27,7 +27,7 @@ function RegisterEvent() {
 
   // Get logged-in student
   const storedUser = JSON.parse(
-    localStorage.getItem("campusxUser")
+    localStorage.getItem("campusxUser") || "null"
   );
 
   const [formData, setFormData] = useState({
@@ -55,7 +55,6 @@ function RegisterEvent() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Check login
     const isLoggedIn =
       localStorage.getItem("campusxLoggedIn") === "true";
 
@@ -64,8 +63,8 @@ function RegisterEvent() {
       return;
     }
 
-    setLoading(true);
     setError("");
+    setLoading(true);
 
     try {
       const response = await fetch(
@@ -76,7 +75,8 @@ function RegisterEvent() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            eventId: Number(id),
+            user_id: storedUser.id,
+            event_id: Number(id),
             name: formData.name,
             email: formData.email,
             college: formData.college,
@@ -88,19 +88,18 @@ function RegisterEvent() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(
-          data.message || "Registration failed"
+        setError(
+          data.message || "Failed to register for this event."
         );
+        return;
       }
 
       setSubmitted(true);
-
     } catch (error) {
       console.error("Registration error:", error);
 
       setError(
-        error.message ||
-          "Unable to register for this event. Please try again."
+        "Unable to connect to CampusX server. Make sure the backend is running."
       );
     } finally {
       setLoading(false);
@@ -112,7 +111,6 @@ function RegisterEvent() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 px-6">
         <div className="text-center">
-
           <h1 className="text-3xl font-bold text-gray-900">
             Event Not Found
           </h1>
@@ -123,7 +121,6 @@ function RegisterEvent() {
           >
             Browse Events
           </Link>
-
         </div>
       </div>
     );
@@ -133,12 +130,9 @@ function RegisterEvent() {
   if (submitted) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 px-6">
-
         <div className="w-full max-w-lg rounded-2xl border border-gray-200 bg-white p-10 text-center shadow-sm">
 
-          <div className="text-6xl">
-            🎉
-          </div>
+          <div className="text-6xl">🎉</div>
 
           <h1 className="mt-6 text-3xl font-bold text-gray-900">
             Registration Successful!
@@ -192,7 +186,6 @@ function RegisterEvent() {
         <div className="mt-8 rounded-2xl border border-gray-200 bg-white p-8 shadow-sm md:p-10">
 
           <div>
-
             <p className="text-sm font-semibold uppercase tracking-wider text-indigo-600">
               CampusX Registration
             </p>
@@ -203,7 +196,6 @@ function RegisterEvent() {
 
             {/* Event Information */}
             <div className="mt-6 rounded-xl bg-indigo-50 p-4">
-
               <div className="flex items-center gap-3">
 
                 <span className="text-3xl">
@@ -211,7 +203,6 @@ function RegisterEvent() {
                 </span>
 
                 <div>
-
                   <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">
                     {event.category}
                   </p>
@@ -219,17 +210,14 @@ function RegisterEvent() {
                   <p className="mt-1 font-bold text-gray-900">
                     {event.title}
                   </p>
-
                 </div>
 
               </div>
-
             </div>
 
             <p className="mt-3 leading-7 text-gray-600">
               Confirm your details below to register for this event.
             </p>
-
           </div>
 
           <form
@@ -239,7 +227,6 @@ function RegisterEvent() {
 
             {/* Name */}
             <div>
-
               <label
                 htmlFor="name"
                 className="block text-sm font-semibold text-gray-700"
@@ -257,12 +244,10 @@ function RegisterEvent() {
                 required
                 className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
               />
-
             </div>
 
             {/* Email */}
             <div>
-
               <label
                 htmlFor="email"
                 className="block text-sm font-semibold text-gray-700"
@@ -280,12 +265,10 @@ function RegisterEvent() {
                 required
                 className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
               />
-
             </div>
 
             {/* College */}
             <div>
-
               <label
                 htmlFor="college"
                 className="block text-sm font-semibold text-gray-700"
@@ -303,12 +286,10 @@ function RegisterEvent() {
                 required
                 className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
               />
-
             </div>
 
             {/* Phone */}
             <div>
-
               <label
                 htmlFor="phone"
                 className="block text-sm font-semibold text-gray-700"
@@ -326,7 +307,6 @@ function RegisterEvent() {
                 required
                 className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
               />
-
             </div>
 
             {/* Error */}
@@ -342,9 +322,7 @@ function RegisterEvent() {
               disabled={loading}
               className="w-full rounded-xl bg-indigo-600 py-4 font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {loading
-                ? "Registering..."
-                : "Submit Registration"}
+              {loading ? "Submitting..." : "Submit Registration"}
             </button>
 
           </form>
