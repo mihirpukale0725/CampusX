@@ -24,7 +24,7 @@ function StudentDashboard() {
     const fetchRegistrations = async () => {
       try {
         const response = await fetch(
-          `http://localhost:5000/api/registrations/student/${encodeURIComponent(
+          `http://127.0.0.1:5000/api/registrations/student/${encodeURIComponent(
             user.email
           )}`
         );
@@ -55,6 +55,12 @@ function StudentDashboard() {
 
     navigate("/login");
   };
+
+  // Calculate upcoming registered events
+  const upcomingEvents = myRegistrations.filter((registration) => {
+    const eventDate = new Date(registration.date);
+    return !isNaN(eventDate.getTime()) && eventDate >= new Date();
+  });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -93,6 +99,7 @@ function StudentDashboard() {
 
         {/* Welcome */}
         <div>
+
           <p className="text-sm font-semibold uppercase tracking-wide text-indigo-600">
             Student Dashboard
           </p>
@@ -104,12 +111,15 @@ function StudentDashboard() {
           <p className="mt-2 text-gray-600">
             Discover events, manage registrations and explore opportunities.
           </p>
+
         </div>
 
         {/* Stats */}
         <div className="mt-8 grid gap-6 md:grid-cols-3">
 
+          {/* Registered Events */}
           <div className="rounded-2xl bg-white p-6 shadow-sm">
+
             <p className="text-sm text-gray-500">
               Registered Events
             </p>
@@ -117,19 +127,25 @@ function StudentDashboard() {
             <p className="mt-2 text-3xl font-bold text-gray-900">
               {myRegistrations.length}
             </p>
+
           </div>
 
+          {/* Upcoming Events */}
           <div className="rounded-2xl bg-white p-6 shadow-sm">
+
             <p className="text-sm text-gray-500">
               Upcoming Events
             </p>
 
             <p className="mt-2 text-3xl font-bold text-gray-900">
-              {myRegistrations.length}
+              {upcomingEvents.length}
             </p>
+
           </div>
 
+          {/* Opportunities */}
           <div className="rounded-2xl bg-white p-6 shadow-sm">
+
             <p className="text-sm text-gray-500">
               Opportunities
             </p>
@@ -137,6 +153,7 @@ function StudentDashboard() {
             <p className="mt-2 text-3xl font-bold text-gray-900">
               3
             </p>
+
           </div>
 
         </div>
@@ -147,6 +164,7 @@ function StudentDashboard() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
             <div>
+
               <h2 className="text-2xl font-bold text-gray-900">
                 My Registrations
               </h2>
@@ -154,6 +172,7 @@ function StudentDashboard() {
               <p className="mt-1 text-gray-500">
                 Events you have registered for.
               </p>
+
             </div>
 
             <Link
@@ -278,6 +297,7 @@ function StudentDashboard() {
                       <div className="grid gap-4 sm:grid-cols-2">
 
                         <div>
+
                           <p className="text-sm text-gray-500">
                             Date
                           </p>
@@ -285,9 +305,11 @@ function StudentDashboard() {
                           <p className="mt-1 font-medium text-gray-900">
                             📅 {registration.date}
                           </p>
+
                         </div>
 
                         <div>
+
                           <p className="text-sm text-gray-500">
                             Location
                           </p>
@@ -295,6 +317,7 @@ function StudentDashboard() {
                           <p className="mt-1 font-medium text-gray-900">
                             📍 {registration.location}
                           </p>
+
                         </div>
 
                       </div>
@@ -344,6 +367,7 @@ function StudentDashboard() {
           <div className="mt-5 grid gap-5 md:grid-cols-2">
 
             <div>
+
               <p className="text-sm text-gray-500">
                 Full Name
               </p>
@@ -351,9 +375,11 @@ function StudentDashboard() {
               <p className="mt-1 font-semibold text-gray-900">
                 {user?.name || "-"}
               </p>
+
             </div>
 
             <div>
+
               <p className="text-sm text-gray-500">
                 Email
               </p>
@@ -361,9 +387,11 @@ function StudentDashboard() {
               <p className="mt-1 font-semibold text-gray-900">
                 {user?.email || "-"}
               </p>
+
             </div>
 
             <div>
+
               <p className="text-sm text-gray-500">
                 College / University
               </p>
@@ -371,6 +399,7 @@ function StudentDashboard() {
               <p className="mt-1 font-semibold text-gray-900">
                 {user?.college || "-"}
               </p>
+
             </div>
 
           </div>
