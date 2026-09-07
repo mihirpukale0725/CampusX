@@ -4,28 +4,31 @@ import { Link, useNavigate } from "react-router-dom";
 function StudentDashboard() {
   const navigate = useNavigate();
 
-  const user = JSON.parse(
-    localStorage.getItem("campusxUser") || "null"
-  );
-
-  const isLoggedIn =
-    localStorage.getItem("campusxLoggedIn") === "true";
-
+  const [user, setUser] = useState(null);
   const [myRegistrations, setMyRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!isLoggedIn || !user?.email) {
+    const loggedIn =
+      localStorage.getItem("campusxLoggedIn") === "true";
+
+    const storedUser = JSON.parse(
+      localStorage.getItem("campusxUser") || "null"
+    );
+
+    if (!loggedIn || !storedUser) {
       navigate("/login");
       return;
     }
+
+    setUser(storedUser);
 
     const fetchRegistrations = async () => {
       try {
         const response = await fetch(
           `http://127.0.0.1:5000/api/registrations/student/${encodeURIComponent(
-            user.email
+            storedUser.email
           )}`
         );
 
@@ -38,8 +41,8 @@ function StudentDashboard() {
         }
 
         setMyRegistrations(data.registrations || []);
-      } catch (error) {
-        console.error("Error fetching registrations:", error);
+      } catch (err) {
+        console.error("Error fetching registrations:", err);
         setError("Unable to load your registrations.");
       } finally {
         setLoading(false);
@@ -47,7 +50,7 @@ function StudentDashboard() {
     };
 
     fetchRegistrations();
-  }, [isLoggedIn, user?.email, navigate]);
+  }, [navigate]);
 
   const handleLogout = () => {
     localStorage.removeItem("campusxLoggedIn");
@@ -56,17 +59,24 @@ function StudentDashboard() {
     navigate("/login");
   };
 
-  // Calculate upcoming registered events
-  const upcomingEvents = myRegistrations.filter((registration) => {
-    const eventDate = new Date(registration.date);
-    return !isNaN(eventDate.getTime()) && eventDate >= new Date();
-  });
+  if (!user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="text-5xl">⏳</div>
+          <p className="mt-4 font-semibold text-gray-900">
+            Loading dashboard...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
 
       {/* Header */}
-      <div className="border-b border-gray-200 bg-white">
+      <header className="border-b border-gray-200 bg-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
 
           <Link
@@ -78,8 +88,8 @@ function StudentDashboard() {
 
           <div className="flex items-center gap-4">
 
-            <span className="hidden text-sm font-medium text-gray-600 sm:block">
-              {user?.name || "Student"}
+            <span className="hidden text-sm text-gray-600 sm:block">
+              {user.email}
             </span>
 
             <button
@@ -90,81 +100,68 @@ function StudentDashboard() {
             </button>
 
           </div>
-
         </div>
-      </div>
+      </header>
 
-      {/* Dashboard */}
+      {/* Main */}
       <main className="mx-auto max-w-7xl px-6 py-10">
 
         {/* Welcome */}
-        <div>
-
+        <section>
           <p className="text-sm font-semibold uppercase tracking-wide text-indigo-600">
             Student Dashboard
           </p>
 
           <h1 className="mt-2 text-3xl font-bold text-gray-900">
-            Welcome back, {user?.name || "Student"}! 👋
+            Welcome back, {user.name}! 👋
           </h1>
 
           <p className="mt-2 text-gray-600">
-            Discover events, manage registrations and explore opportunities.
+            Manage your CampusX registrations and discover new opportunities.
           </p>
-
-        </div>
+        </section>
 
         {/* Stats */}
-        <div className="mt-8 grid gap-6 md:grid-cols-3">
+        <section className="mt-8 grid gap-6 md:grid-cols-3">
 
-          {/* Registered Events */}
-          <div className="rounded-2xl bg-white p-6 shadow-sm">
-
-            <p className="text-sm text-gray-500">
+          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <p className="text-sm font-medium text-gray-500">
               Registered Events
             </p>
 
             <p className="mt-2 text-3xl font-bold text-gray-900">
-              {myRegistrations.length}
+              {loading ? "—" : myRegistrations.length}
             </p>
-
           </div>
 
-          {/* Upcoming Events */}
-          <div className="rounded-2xl bg-white p-6 shadow-sm">
-
-            <p className="text-sm text-gray-500">
+          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <p className="text-sm font-medium text-gray-500">
               Upcoming Events
             </p>
 
             <p className="mt-2 text-3xl font-bold text-gray-900">
-              {upcomingEvents.length}
+              {loading ? "—" : myRegistrations.length}
             </p>
-
           </div>
 
-          {/* Opportunities */}
-          <div className="rounded-2xl bg-white p-6 shadow-sm">
-
-            <p className="text-sm text-gray-500">
+          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <p className="text-sm font-medium text-gray-500">
               Opportunities
             </p>
 
             <p className="mt-2 text-3xl font-bold text-gray-900">
               3
             </p>
-
           </div>
 
-        </div>
+        </section>
 
         {/* My Registrations */}
-        <div className="mt-10">
+        <section className="mt-10">
 
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
             <div>
-
               <h2 className="text-2xl font-bold text-gray-900">
                 My Registrations
               </h2>
@@ -172,7 +169,6 @@ function StudentDashboard() {
               <p className="mt-1 text-gray-500">
                 Events you have registered for.
               </p>
-
             </div>
 
             <Link
@@ -201,7 +197,7 @@ function StudentDashboard() {
 
           {/* Error */}
           {!loading && error && (
-            <div className="mt-6 rounded-2xl bg-red-50 p-6 text-center">
+            <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 p-6 text-center">
 
               <p className="font-semibold text-red-600">
                 {error}
@@ -209,7 +205,7 @@ function StudentDashboard() {
 
               <button
                 onClick={() => window.location.reload()}
-                className="mt-4 rounded-xl bg-red-600 px-5 py-2 text-sm font-semibold text-white hover:bg-red-700"
+                className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
               >
                 Try Again
               </button>
@@ -217,7 +213,7 @@ function StudentDashboard() {
             </div>
           )}
 
-          {/* No registrations */}
+          {/* Empty */}
           {!loading &&
             !error &&
             myRegistrations.length === 0 && (
@@ -251,114 +247,110 @@ function StudentDashboard() {
             myRegistrations.length > 0 && (
               <div className="mt-6 grid gap-6 md:grid-cols-2">
 
-                {myRegistrations.map((registration) => (
+                {myRegistrations.map((registration) => {
 
-                  <div
-                    key={registration.id}
-                    className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
-                  >
+                  const emoji =
+                    registration.category === "Hackathon"
+                      ? "🚀"
+                      : registration.category === "Coding Contest"
+                      ? "💻"
+                      : "🛠️";
 
-                    {/* Event Header */}
-                    <div className="flex items-start justify-between gap-4">
+                  return (
+                    <div
+                      key={registration.id}
+                      className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md"
+                    >
 
-                      <div className="flex items-center gap-4">
+                      {/* Card Header */}
+                      <div className="flex items-start justify-between gap-4">
 
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-2xl">
-                          {registration.category === "Hackathon"
-                            ? "🚀"
-                            : registration.category === "Coding Contest"
-                            ? "💻"
-                            : "🛠️"}
+                        <div className="flex items-center gap-4">
+
+                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-2xl">
+                            {emoji}
+                          </div>
+
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">
+                              {registration.category}
+                            </p>
+
+                            <h3 className="mt-1 font-bold text-gray-900">
+                              {registration.event_title}
+                            </h3>
+                          </div>
+
                         </div>
 
-                        <div>
-
-                          <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">
-                            {registration.category}
-                          </p>
-
-                          <h3 className="mt-1 font-bold text-gray-900">
-                            {registration.event_title}
-                          </h3>
-
-                        </div>
+                        <span className="shrink-0 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+                          Registered
+                        </span>
 
                       </div>
 
-                      <span className="shrink-0 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
-                        Registered
-                      </span>
+                      {/* Details */}
+                      <div className="mt-5 border-t border-gray-100 pt-4">
 
-                    </div>
+                        <div className="grid gap-4 sm:grid-cols-2">
 
-                    {/* Details */}
-                    <div className="mt-5 border-t border-gray-100 pt-4">
+                          <div>
+                            <p className="text-sm text-gray-500">
+                              Date
+                            </p>
 
-                      <div className="grid gap-4 sm:grid-cols-2">
+                            <p className="mt-1 font-medium text-gray-900">
+                              📅 {registration.date}
+                            </p>
+                          </div>
 
-                        <div>
+                          <div>
+                            <p className="text-sm text-gray-500">
+                              Location
+                            </p>
 
+                            <p className="mt-1 font-medium text-gray-900">
+                              📍 {registration.location}
+                            </p>
+                          </div>
+
+                        </div>
+
+                        <div className="mt-4">
                           <p className="text-sm text-gray-500">
-                            Date
+                            Registered by
                           </p>
 
                           <p className="mt-1 font-medium text-gray-900">
-                            📅 {registration.date}
+                            {registration.name}
                           </p>
-
-                        </div>
-
-                        <div>
-
-                          <p className="text-sm text-gray-500">
-                            Location
-                          </p>
-
-                          <p className="mt-1 font-medium text-gray-900">
-                            📍 {registration.location}
-                          </p>
-
                         </div>
 
                       </div>
 
-                      <div className="mt-4">
+                      {/* Action */}
+                      <div className="mt-5 border-t border-gray-100 pt-4">
 
-                        <p className="text-sm text-gray-500">
-                          Registered by
-                        </p>
-
-                        <p className="mt-1 font-medium text-gray-900">
-                          {registration.name}
-                        </p>
+                        <Link
+                          to={`/events/${registration.event_id}`}
+                          className="text-sm font-semibold text-indigo-600 hover:text-indigo-700"
+                        >
+                          View Event →
+                        </Link>
 
                       </div>
 
                     </div>
-
-                    {/* Action */}
-                    <div className="mt-5 border-t border-gray-100 pt-4">
-
-                      <Link
-                        to={`/events/${registration.event_id}`}
-                        className="text-sm font-semibold text-indigo-600 hover:text-indigo-700"
-                      >
-                        View Event →
-                      </Link>
-
-                    </div>
-
-                  </div>
-
-                ))}
+                  );
+                })}
 
               </div>
             )}
 
-        </div>
+        </section>
 
         {/* Profile */}
-        <div className="mt-10 rounded-2xl bg-white p-6 shadow-sm">
+        <section className="mt-10 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
 
           <h2 className="text-xl font-bold text-gray-900">
             My Profile
@@ -367,47 +359,41 @@ function StudentDashboard() {
           <div className="mt-5 grid gap-5 md:grid-cols-2">
 
             <div>
-
               <p className="text-sm text-gray-500">
                 Full Name
               </p>
 
               <p className="mt-1 font-semibold text-gray-900">
-                {user?.name || "-"}
+                {user.name || "-"}
               </p>
-
             </div>
 
             <div>
-
               <p className="text-sm text-gray-500">
                 Email
               </p>
 
               <p className="mt-1 font-semibold text-gray-900">
-                {user?.email || "-"}
+                {user.email || "-"}
               </p>
-
             </div>
 
             <div>
-
               <p className="text-sm text-gray-500">
                 College / University
               </p>
 
               <p className="mt-1 font-semibold text-gray-900">
-                {user?.college || "-"}
+                {user.college || "-"}
               </p>
-
             </div>
 
           </div>
 
-        </div>
+        </section>
 
         {/* Quick Actions */}
-        <div className="mt-8 rounded-2xl bg-white p-6 shadow-sm">
+        <section className="mt-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
 
           <h2 className="text-xl font-bold text-gray-900">
             Quick Actions
@@ -431,7 +417,7 @@ function StudentDashboard() {
 
           </div>
 
-        </div>
+        </section>
 
       </main>
 
