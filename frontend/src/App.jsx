@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import StudentDashboard from "./pages/StudentDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminDashboard from "./pages/AdminDashboard";
 function Home() {
   return (
     <>
@@ -221,6 +222,7 @@ function App() {
       element={<RegisterEvent />}
     />
 
+    <Route path="/admin/dashboard" element={<AdminDashboard />} />
   </Route>
 </Routes>
     </BrowserRouter>
