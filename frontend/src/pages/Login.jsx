@@ -31,7 +31,7 @@ function Login() {
 
     try {
       const response = await fetch(
-        "http://127.0.0.1:5000/api/users/login",
+        "http://127.0.0.1:5000/api/auth/login",
         {
           method: "POST",
           headers: {
@@ -47,11 +47,12 @@ function Login() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.message || "Invalid email or password.");
+        setError(
+          data.message || "Invalid email or password."
+        );
         return;
       }
 
-      // Store logged-in user
       localStorage.setItem(
         "campusxUser",
         JSON.stringify(data.user)
@@ -62,7 +63,6 @@ function Login() {
         "true"
       );
 
-      // Go to dashboard
       navigate("/student/dashboard");
 
     } catch (error) {
@@ -111,7 +111,6 @@ function Login() {
 
             {/* Email */}
             <div>
-
               <label
                 htmlFor="email"
                 className="block text-sm font-semibold text-gray-700"
@@ -127,14 +126,12 @@ function Login() {
                 onChange={handleChange}
                 placeholder="Enter your email"
                 required
-                className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
               />
-
             </div>
 
             {/* Password */}
             <div>
-
               <label
                 htmlFor="password"
                 className="block text-sm font-semibold text-gray-700"
@@ -150,9 +147,8 @@ function Login() {
                 onChange={handleChange}
                 placeholder="Enter your password"
                 required
-                className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
               />
-
             </div>
 
             {/* Error */}

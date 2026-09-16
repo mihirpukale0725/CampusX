@@ -10,6 +10,8 @@ import Register from "./pages/Register";
 import StudentDashboard from "./pages/StudentDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminEvents from "./pages/AdminEvents";
+
 function Home() {
   return (
     <>
@@ -223,6 +225,12 @@ function App() {
     />
 
     <Route path="/admin/dashboard" element={<AdminDashboard />} />
+
+    <Route
+  path="/admin/events"
+  element={<AdminEvents />}
+/>
+
   </Route>
 </Routes>
     </BrowserRouter>

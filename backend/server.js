@@ -2,42 +2,90 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 
-const pool = require("./config/db");
-const eventsRouter = require("./routes/events");
-const registrationsRoutes = require("./routes/registrations");
-
 const app = express();
 
-app.use(cors());
+// ===============================
+// Middleware
+// ===============================
+
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+
 app.use(express.json());
-app.use("/api/events", eventsRouter);
+
+// ===============================
+// Routes
+// ===============================
+
+const eventsRoutes = require("./routes/events");
+const registrationsRoutes = require("./routes/registrations");
+const usersRoutes = require("./routes/users");
+
+// Events
+app.use("/api/events", eventsRoutes);
+
+// Registrations
 app.use("/api/registrations", registrationsRoutes);
 
+// Users / Authentication
+app.use("/api/users", usersRoutes);
+
+// Also support /api/auth/login
+app.use("/api/auth", usersRoutes);
+
+// ===============================
+// Health Check
+// ===============================
+
 app.get("/", (req, res) => {
-  res.send("CampusX API is running 🚀");
+  res.json({
+    success: true,
+    message: "CampusX backend is running",
+  });
 });
 
-app.get("/api/db-test", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT NOW()");
-
-    res.json({
-      success: true,
-      message: "PostgreSQL connection successful 🚀",
-      time: result.rows[0].now,
-    });
-  } catch (error) {
-    console.error("Database connection error:", error.message);
-
-    res.status(500).json({
-      success: false,
-      message: "Database connection failed",
-    });
-  }
+app.get("/api/health", (req, res) => {
+  res.json({
+    success: true,
+    message: "CampusX API is healthy",
+  });
 });
+
+// ===============================
+// 404 Handler
+// ===============================
+
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `Route not found: ${req.method} ${req.originalUrl}`,
+  });
+});
+
+// ===============================
+// Error Handler
+// ===============================
+
+app.use((err, req, res, next) => {
+  console.error("Server Error:", err);
+
+  res.status(500).json({
+    success: false,
+    message: "Internal server error",
+  });
+});
+
+// ===============================
+// Start Server
+// ===============================
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+app.listen(PORT, "127.0.0.1", () => {
   console.log(`CampusX server running on http://localhost:${PORT}`);
 });
