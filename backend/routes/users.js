@@ -125,10 +125,16 @@ router.post("/login", async (req, res) => {
     delete user.password;
 
     res.json({
-      success: true,
-      message: "Login successful.",
-      user,
-    });
+  success: true,
+  message: "Login successful.",
+  user: {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    college: user.college,
+    created_at: user.created_at
+  }
+});
 
   } catch (error) {
     console.error("Login error:", error.message);
